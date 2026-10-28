@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Algorithmic Leviathan — Reference Manager</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&display=swap" rel="stylesheet">
+<style>
+    :root {
+        --bg-color: #faf9f9;
+        --card-bg: #ffffff;
+        --pastel-mint: #a1e3d8;
+        --pastel-mint-dark: #8acbc0;
+        --pastel-blue: #a0c4ff;
+        --pastel-blue-dark: #8bb3f2;
+        --pastel-peach: #ffc6ff;
+        --pastel-peach-light: rgba(255, 198, 255, 0.25);
+        --text-main: #2d3748;
+        --text-muted: #718096;
+        --border-color: #e2e8f0;
+    }
+
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+
+    body {
+        font-family: 'DM Sans', sans-serif;
+        background-color: var(--bg-color);
+        color: var(--text-main);
+        line-height: 1.6;
+        padding-top: 80px; /* Space for sticky header */
+    }
+
+    /* Sticky Header */
+    header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        background-color: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(8px);
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        z-index: 1000;
+        padding: 15px 30px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+
+    .header-title h1 {
+        font-size: 1.25rem;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+    }
+
+    .header-title span {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        font-weight: 500;
+    }
+
+    .progress-container {
+        flex: 1;
+        max-width: 400px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .progress-header {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--text-muted);
+    }
+
+    .progress-bar-bg {
+        width: 100%;
+        height: 10px;
+        background-color: var(--border-color);
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    .progress-bar-fill {
+        height: 100%;
+        width: 0%;
+        background-color: var(--pastel-mint);
+        transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .btn-export {
+        background-color: var(--pastel-blue);
+        color: #1a202c;
+        border: none;
+        padding: 10px 18px;
+        border-radius: 8px;
+        font-family: inherit;
+        font-weight: 600;
+        font-size: 0.9rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: background-color 0.2s, transform 0.1s;
+    }
+
+    .btn-export:hover {
+        background-color: var(--pastel-blue-dark);
+    }
+    
+    .btn-export:active {
+        transform: scale(0.97);
+    }
+
+    /* Main Content */
+    main {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 30px;
+    }
+
+    /* Accordion Details */
+    details {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        margin-bottom: 20px;
+        overflow: hidden;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+    }
+
+    summary {
+        padding: 20px 24px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        list-style: none;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background-color: var(--card-bg);
+        transition: background-color 0.2s;
+    }
+
+    summary:hover {
+        background-color: #f8fafc;
+    }
+
+    summary::-webkit-details-marker {
+        display: none;
+    }
+
+    summary::after {
+        content: '+';
+        font-size: 1.5rem;
+        color: var(--text-muted);
+        font-weight: 400;
+        transition: transform 0.3s;
+    }
+
+    details[open] summary::after {
+        transform: rotate(45deg);
+    }
+
+    details[open] summary {
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .details-content {
+        padding: 24px;
+        background-color: var(--bg-color);
+    }
+
+    /* Grid & Cards */
+    .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 20px;
+    }
+
+    .card {
+        background-color: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        transition: box-shadow 0.2s, border-color 0.2s;
+    }
+
+    .card:hover {
+        box-shadow: 0 8px 15px rgba(0,0,0,0.04);
+        border-color: var(--pastel-blue);
+    }
+
+    .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 12px;
+    }
+
+    .ref-id {
+        background-color: var(--bg-color);
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: var(--text-muted);
+        border: 1px solid var(--border-color);
+    }
+
+    /* Custom Checkbox */
+    .checkbox-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+    }
+
+    .checkbox-wrapper input {
+        position: absolute;
+        opacity: 0;
+        cursor: pointer;
+        height: 0;
+        width: 0;
+    }
+
+    .checkmark {
+        height: 24px;
+        width: 24px;
+        background-color: #fff;
+        border: 2px solid var(--border-color);
+        border-radius: 6px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        transition: all 0.2s ease;
+    }
+
+    .checkbox-wrapper:hover input ~ .checkmark {
+        border-color: var(--pastel-mint);
+    }
+
+    .checkbox-wrapper input:checked ~ .checkmark {
+        background-color: var(--pastel-mint);
+        border-color: var(--pastel-mint);
+    }
+
+    .checkmark svg {
+        fill: none;
+        stroke: #1a202c;
+        stroke-width: 3;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        width: 14px;
+        height: 14px;
+        opacity: 0;
+        transform: scale(0.5);
+        transition: all 0.2s ease;
+    }
+
+    .checkbox-wrapper input:checked ~ .checkmark svg {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    .card-title {
+        font-size: 1rem;
+        font-weight: 600;
+        margin-bottom: 8px;
+        line-height: 1.4;
+    }
+
+    .card-meta {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        margin-bottom: 20px;
+        flex: 1;
+    }
+
+    .card-meta strong {
+        color: var(--text-main);
+        font-weight: 500;
+    }
+
+    .btn-link {
+        display: inline-block;
+        text-align: center;
+        text-decoration: none;
+        background-color: var(--bg-color);
+        color: var(--text-main);
+        border: 1px solid var(--border-color);
+        padding: 8px 12px;
+        border-radius: 6px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        transition: all 0.2s;
+        margin-top: auto;
+    }
+
+    .btn-link:hover {
+        background-color: var(--pastel-mint);
+        border-color: var(--pastel-mint-dark);
+    }
+
+    .card.checked {
+        background-color: #fcfdfe;
+        border-color: var(--pastel-mint);
+    }
+    .card.checked .card-title {
+        color: var(--text-muted);
+    }
+
+    /* Critique Section */
+    .critique-section {
+        margin-top: 40px;
+        padding: 40px;
+        background-color: var(--pastel-peach-light);
+        border: 1px solid var(--pastel-peach);
+        border-radius: 16px;
+    }
+
+    .critique-section h2 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .critique-section h2 svg {
+        color: #d97706;
+    }
+
+    .critique-section p {
+        margin-bottom: 16px;
+        font-size: 1.05rem;
+        line-height: 1.7;
+    }
+
+    .critique-section .highlight {
+        background-color: #fff;
+        padding: 24px;
+        border-left: 4px solid var(--pastel-peach);
+        border-radius: 0 12px 12px 0;
+        font-weight: 500;
+        font-size: 1.1rem;
+        box-shadow: 0 4px 15px rgba(255, 198, 255, 0.4);
+    }
+
+    @media (max-width: 768px) {
+        header { padding: 15px; flex-direction: column; align-items: flex-start; }
+        .progress-container { width: 100%; max-width: 100%; }
+        .btn-export { width: 100%; justify-content: center; }
+        body { padding-top: 140px; }
+        .critique-section { padding: 24px; }
+    }
+</style>
+</head>
+<body>
+
+<header>
+    <div class="header-title">
+        <h1>Algorithmic Leviathan</h1>
+        <span>Reference Manager & Task Tracker</span>
+    </div>
+    
+    <div class="progress-container">
+        <div class="progress-header">
+            <span>Global Progress</span>
+            <span id="progress-text">0% (0/65)</span>
+        </div>
+        <div class="progress-bar-bg">
+            <div class="progress-bar-fill" id="progress-fill"></div>
+        </div>
+    </div>
+
+    <button class="btn-export" onclick="exportJson()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+        Export JSON
+    </button>
+</header>
+
+<main id="app-container">
+    <!-- Sections injected via JavaScript -->
+</main>
+
+<main>
+    <section class="critique-section">
+        <h2>
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+            Critique & Surprising Synthesis
+        </h2>
+        <p><strong>Critique of the Collection:</strong> This bibliography is an absolute masterclass in mapping comparative digital policy (India/Sri Lanka) to Western political theory (Hobbesian State of Nature). However, considering the audience is the <em>'Peradeniya Philosophy Day 2025'</em>, it completely lacks a South Asian ontological framework. The 'Algorithmic Leviathan' assumes a Hobbesian reality where power must be monopolized to escape violent chaos.</p>
+        
+        <div class="highlight">
+            <p><strong>The Surprising Synthesis (Your Intellectual Trump Card):</strong></p>
+            <p>Do not just stop at Hobbes. Contrast the Algorithmic Leviathan with the Buddhist concept of the <em>Aggañña Sutta</em> (The discourse on the genesis of society). In Buddhist political philosophy, the state did not emerge from a fearful Leviathan, but from the <em>Mahasammata</em> (The Great Elect)—a ruler chosen by the people strictly to maintain order and bound by <em>Dharma</em> (ethics and duty).</p>
+            <p style="margin-bottom: 0; margin-top: 15px;"><strong>Your surprising argument for the conference:</strong> The Algorithmic State in South Asia (like Aadhaar and SL's PDPA) initially promised to be a digital <em>Mahasammata</em> (a trusted, duty-bound system to distribute welfare efficiently). However, without democratic <em>Dharma</em> (oversight), it is mutating into a Hobbesian <em>Leviathan</em>—coercive, untrustable, and absolute. Bridging Western digital authoritarianism with foundational Indo-Sri Lankan philosophy will give you a profound, standing-ovation-worthy conclusion.</p>
+        </div>
+    </section>
+</main>
+
+<script>
+const referenceData = [
+    {
+        sectionTitle: "Section A: Algorithmic Leviathan & Philosophy",
+        items: [
+            { id: "A-1", title: "Dissecting the Algorithmic Leviathan", author: "Pascal D. König", year: "2020", url: "https://www.scribd.com/document/435487703/Dissecting-the-Algorithmic-Leviathan-On-the-Socio-Political-Anatomy-of-Algorithmic-Governance-Pascal-D-Ko-nig" },
+            { id: "A-2", title: "Algorithmic Rule By Law", author: "Nathalie A. Smuha", year: "2024", url: "https://resolve.cambridge.org/core/services/aop-cambridge-core/content/view/92448E28D6D7081859FABF7295ADB336/9781009427463pre_i-iv.pdf/algorithmic-rule-by-law.pdf" },
+            { id: "A-3", title: "The Relentless Threat of Algorithmic Rule by Law", author: "Nathalie A. Smuha", year: "2025", url: "https://ssrn.com/abstract=6136128" },
+            { id: "A-4", title: "The Algorithmic Leviathan", author: "Seth Lazar", year: "2022", url: "https://philarchive.org/archive/CRETAL-3" },
+            { id: "A-5", title: "AGI, Governments, and Free Societies", author: "arXiv", year: "2025", url: "https://arxiv.org/pdf/2503.05710" },
+            { id: "A-6", title: "Artificial Leviathan", author: "Gordon Dai et al", year: "2024", url: "https://arxiv.org/pdf/2406.14373" },
+            { id: "A-7", title: "Cyber Security and the Leviathan", author: "Joseph Da Silva", year: "2022", url: "https://arxiv.org/pdf/2203.05256" },
+            { id: "A-8", title: "Digital Leviathan", author: "Multiple authors", year: "2022", url: "https://www.researchgate.net/publication/363373544_Digital_Leviathan_Scenarios_for_the_Development_of_the_Hobbesian_Monster_in_the_21st_Century" },
+            { id: "A-9", title: "Escaping Hobbes", author: "Conor Gearty", year: "2010", url: "https://eprints.lse.ac.uk/32906/1/WPS2010-03_Gearty.pdf" },
+            { id: "A-10", title: "Algorithm Power and Legal Boundaries", author: "Jinghui He", year: "2025", url: "https://www.mdpi.com/2075-471X/14/4/54" }
+        ]
+    },
+    {
+        sectionTitle: "Section B: Data Colonialism & Digital Sovereignty",
+        items: [
+            { id: "B-1", title: "The Decolonial Turn in Data", author: "Nick Couldry", year: "2021", url: "https://eprints.lse.ac.uk/111963/3/The_decolonial_turn_in_data_and_technology_research_what_is_at_stake_and_where_is_it_heading.pdf" },
+            { id: "B-2", title: "Our Data, Ourselves", author: "Dutta & Mazumdar", year: "2025", url: "https://pure.jgu.edu.in/id/eprint/10074/1/dutta-mazumdar-2025-our-data-ourselves-participation-justice-and-alternative-futures-of-data-sovereignty-in-india.pdf" },
+            { id: "B-3", title: "Digital Sovereignty Strategies", author: "arXiv", year: "2023", url: "https://arxiv.org/pdf/2307.01791" },
+            { id: "B-4", title: "The Treachery of Images in Digital Sovereignty", author: "arXiv", year: "2020", url: "https://arxiv.org/pdf/2012.02724" }
+        ]
+    },
+    {
+        sectionTitle: "Section C: India: Surveillance, Aadhaar & DPDP",
+        items: [
+            { id: "C-1", title: "Surveillance in the Name of Governance", author: "Katja Henne", year: "2019", url: "https://link.springer.com/chapter/10.1007/978-3-030-14540-8_11" },
+            { id: "C-2", title: "Digital Surveillance and Threat to Civil Liberties", author: "Sangeeta Mahapatra", year: "2021", url: "https://nbn-resolving.org/urn:nbn:de:0168-ssoar-73130-3" },
+            { id: "C-3", title: "New Principles for Governing Aadhaar", author: "Anand & Anand", year: "2021", url: "https://discovery.ucl.ac.uk/id/eprint/10195539/1/Anand_Anand%20RD10_2-15-2021.pdf" },
+            { id: "C-4", title: "Aadhaar and Data Privacy", author: "Priya Singh", year: "2019", url: "https://diri.isb.edu/content/dam/sites/diri/SINGH%20ICS%20aadhaar.pdf.coredownload.pdf" },
+            { id: "C-5", title: "Privacy Concerns with Aadhaar", author: "Banerjee", year: "Unknown", url: "https://www.cse.iitd.ernet.in/~suban/reports/cacm2.pdf" },
+            { id: "C-6", title: "Recalibrating Informational Privacy", author: "Ananya P.", year: "2026", url: "https://www.juscorpus.com/wp-content/uploads/2026/05/36.-Ananya-P.pdf" },
+            { id: "C-7", title: "The Pegasus Case and Privacy", author: "Chandrika Rao Gadicheria", year: "2025", url: "https://www.juscorpus.com/wp-content/uploads/2025/10/22.-Chandrika-Rao-Gadicheria.pdf" },
+            { id: "C-8", title: "Digital Privacy and State Surveillance", author: "Reddy et al.", year: "2025", url: "https://ssrn.com/abstract=5330133" },
+            { id: "C-9", title: "Democracy in the Age of Surveillance", author: "Zenodo", year: "2025", url: "https://zenodo.org/records/15058798" },
+            { id: "C-10", title: "Politics of Biometric Identification", author: "Ashraf", year: "2025", url: "https://www.jmi.ac.in/Upload/Research/ab_2025_ps_ashraf.pdf" },
+            { id: "C-11", title: "Tracing Biometric Assemblages", author: "Scripps College", year: "Unknown", url: "https://core.ac.uk/download/344756056.pdf" },
+            { id: "C-12", title: "Digital Surveillance and Civil Rights", author: "Dr. Rumi Dhar", year: "2024", url: "https://www.cnlu.ac.in/wp-content/uploads/2025/05/Digital-Surveillance-And-Civil-Rights-Assessing-The-Impact-On-Privacy-by-Dr.-Rumi-Dhar-Ms.-Sonia-Nath.pdf" },
+            { id: "C-13", title: "Digital Sovereignty and India's Data Dilemma", author: "Vedika", year: "2025", url: "https://www.juscorpus.com/wp-content/uploads/2025/03/46.-Vedika.pdf" },
+            { id: "C-14", title: "Algorithmic Governance and Surveillance Federalism", author: "Frontiers", year: "2026", url: "https://www.frontiersin.org/journals/political-science/articles/10.3389/fpos.2026.1757636/full" },
+            { id: "C-15", title: "Communications Under Siege", author: "P. Arun", year: "2025", url: "https://ojs.library.queensu.ca/index.php/surveillance-and-society/article/view/18030" },
+            { id: "C-16", title: "Penetrative or Embracive?", author: "ResearchGate", year: "2019", url: "https://www.researchgate.net/publication/332702031_Penetrative_or_Embracive_Exploring_State_Surveillance_and_Democracy_in_India" }
+        ]
+    },
+    {
+        sectionTitle: "Section D: Sri Lanka: OSA, PDPA & Digital Rights",
+        items: [
+            { id: "D-1", title: "Comparative Legal Analysis of SL Online Safety Act", author: "OUSL", year: "2024", url: "https://ours.ou.ac.lk/wp-content/uploads/2024/12/ID-206-_IRC-OUSL-2024.pdf" },
+            { id: "D-2", title: "SMEs and Journalists Safe Under SL Data Protection?", author: "Pattiarachchi", year: "2025", url: "https://etheses.whiterose.ac.uk/id/eprint/38171/1/Pattiarachchi_%20302038475_%20Thesis.pdf" },
+            { id: "D-3", title: "SL Personal Data Protection Act Finalised", author: "Graham Greenleaf", year: "2022", url: "https://ssrn.com/abstract=4181012" },
+            { id: "D-4", title: "SL Personal Data Protection Legislation Overview", author: "Fernando & Wickramasinghe", year: "2022", url: "https://ssrn.com/abstract=4246818" },
+            { id: "D-5", title: "Advances in South Asian Data Privacy Laws", author: "Greenleaf", year: "2020", url: "https://ssrn.com/abstract=3549055" },
+            { id: "D-6", title: "Freedom on the Net 2024 — Sri Lanka", author: "Freedom House", year: "2024", url: "https://freedomhouse.org/country/sri-lanka/freedom-net/2024" },
+            { id: "D-7", title: "Criminalisation of Online Expression in SL", author: "APC", year: "2024", url: "https://apc.org/node/40238" },
+            { id: "D-8", title: "A Phantom that is Real", author: "Adayaalam Centre", year: "2025", url: "https://sangam.org/?p=24409" },
+            { id: "D-9", title: "SL: False Terrorism Cases Enable Repression", author: "HRW", year: "2024", url: "https://www.ecoi.net/en/document/2112627.html" },
+            { id: "D-10", title: "DFAT Country Information Report SL", author: "DFAT", year: "2024", url: "https://www.dfat.gov.au/sites/default/files/country-information-report-sri-lanka.pdf" }
+        ]
+    },
+    {
+        sectionTitle: "Section E: Primary Legal Sources",
+        items: [
+            { id: "E-1", title: "Personal Data Protection Act, No. 9 of 2022 SL", author: "Gov of SL", year: "2022", url: "https://documents.gov.lk/view/acts/2022/3/09-2022_E.pdf" },
+            { id: "E-2", title: "Digital Personal Data Protection Act, 2023 India", author: "MeitY", year: "2023", url: "https://www.meity.gov.in/writereaddata/files/Digital%20Personal%20Data%20Protection%20Act%202023.pdf" },
+            { id: "E-3", title: "Aadhaar Judgment", author: "SC India", year: "2018", url: "https://www.supremecourtofindia.nic.in/supremecourt/2012/35071/35071_2012_Judgement_26-Sep-2018.pdf" },
+            { id: "E-4", title: "K.S. Puttaswamy v. Union of India Summary", author: "Columbia Global", year: "2017", url: "https://globalfreedomofexpression.columbia.edu/cases/puttaswamy-v-india" },
+            { id: "E-5", title: "Leviathan (Complete Original Text)", author: "Thomas Hobbes", year: "1651", url: "https://archive.org/details/in.ernet.dli.2015.32247" }
+        ]
+    },
+    {
+        sectionTitle: "Section F: Comparative South Asia & AI Governance",
+        items: [
+            { id: "F-1", title: "Algorithmic Discrimination", author: "Md Akidul Hoque", year: "2026", url: "https://link.springer.com/chapter/10.1007/978-3-032-28051-0_7" },
+            { id: "F-2", title: "Digital Governance in South Asia", author: "Sinha & Sharma", year: "2024", url: "https://www.researchgate.net/publication/388685473_Introduction_to_Digital_Governance_and_Digital_Politics_in_South_Asia" },
+            { id: "F-3", title: "Surveillance, Sovereignty, and Strategic Autonomy", author: "Kasana", year: "2025", url: "https://www.sociologyjournal.in/assets/archives/2025/vol7issue4/7076.pdf" },
+            { id: "F-4", title: "Political Economy of Authoritarian AI Policy", author: "NPE", year: "2026", url: "https://www.tandfonline.com/doi/full/10.1080/13563467.2026.2637132" },
+            { id: "F-5", title: "Algorithmic Governance and Big Tech", author: "Cambridge Core", year: "2021", url: "https://www.cambridge.org/core/journals/perspectives-on-politics/article/algorithmic-governance-and-the-international-politics-of-big-tech/3C04908735A5F2EE8A70AFED647741FB" },
+            { id: "F-6", title: "Dharma, Duty, and Data", author: "Trivedi", year: "2026", url: "https://www.philarchive.org/s/Dr%20Dhananjay%20Trivedi" },
+            { id: "F-7", title: "Metamorfose do Leviatã", author: "Dorneles", year: "2025", url: "https://periodicosbrasil.emnuvens.com.br/revista/article/download/366/329/781" }
+        ]
+    },
+    {
+        sectionTitle: "Section G: Surveillance Theory & Philosophy",
+        items: [
+            { id: "G-1", title: "Decolonial AI", author: "Shakir Mohamed", year: "2020", url: "https://link.springer.com/article/10.1007/s13347-020-00405-8" },
+            { id: "G-2", title: "Why Algorithms Remain Unjust", author: "arXiv", year: "2024", url: "https://arxiv.org/pdf/2405.18461" },
+            { id: "G-3", title: "V-Dem Democracy Report 2024", author: "V-Dem", year: "2024", url: "https://www.v-dem.net/publications/democracy-reports/" },
+            { id: "G-4", title: "UN Special Rapporteur on Privacy", author: "UN OHCHR", year: "2021-2024", url: "https://www.ohchr.org/en/special-procedures/sr-privacy" },
+            { id: "G-5", title: "Surveillance and National Security", author: "Atlantis Press", year: "Unknown", url: "https://www.atlantis-press.com/article/126011896.pdf" },
+            { id: "G-6", title: "Digital Authoritarianism and Legitimization", author: "Yilmaz", year: "2023", url: "https://link.springer.com/chapter/10.1007/978-981-99-3600-7_6" },
+            { id: "G-7", title: "Escaping the State of Nature", author: "arXiv", year: "2019", url: "https://arxiv.org/pdf/1906.09874" }
+        ]
+    },
+    {
+        sectionTitle: "Section H: Democratic Theory & Social Contract",
+        items: [
+            { id: "H-1", title: "Sovereignty-Internationalism Paradox", author: "DNB", year: "2024", url: "https://d-nb.info/1374849197/34" },
+            { id: "H-2", title: "Algorithms Don't Have a Future", author: "Stader", year: "2024", url: "https://doi.org/10.1007/s13347-024-00705-3" },
+            { id: "H-3", title: "Democracy in the Age of Surveillance", author: "Zenodo", year: "2025", url: "https://zenodo.org/records/15058798" },
+            { id: "H-4", title: "The Algorithmic Leviathan", author: "Lazar", year: "2022", url: "https://philarchive.org/archive/CRETAL-3v2" },
+            { id: "H-5", title: "Surveillance and Its Impact on Civil Liberties", author: "IJLSI", year: "2025", url: "https://ijlsi.com/article/view/surveillance-and-its-impact-on-civil-liberties" },
+            { id: "H-6", title: "From Data Sovereignty to Algorithmic Sovereignty", author: "ResearchGate", year: "2024", url: "https://www.researchgate.net/publication/401562451_From_Data_Sovereignty_to_Algorithmic_Sovereignty_Reimagining_Global_Governance_under_Intelligent_Infrastructure" }
+        ]
+    }
+];
+
+const totalItems = referenceData.reduce((acc, section) => acc + section.items.length, 0);
+const savedState = JSON.parse(localStorage.getItem('algorithmicLeviathanState') || '{}');
+
+function renderApp() {
+    const container = document.getElementById('app-container');
+    
+    referenceData.forEach((section, index) => {
+        const details = document.createElement('details');
+        // Open the first section by default
+        if (index === 0) details.open = true;
+
+        const summary = document.createElement('summary');
+        summary.textContent = section.sectionTitle;
+        details.appendChild(summary);
+
+        const contentDiv = document.createElement('div');
+        contentDiv.className = 'details-content';
+        
+        const grid = document.createElement('div');
+        grid.className = 'grid';
+
+        section.items.forEach(item => {
+            const isChecked = savedState[item.id] === true;
+            
+            const card = document.createElement('div');
+            card.className = `card ${isChecked ? 'checked' : ''}`;
+            card.id = `card-${item.id}`;
+
+            card.innerHTML = `
+                <div class="card-header">
+                    <span class="ref-id">${item.id}</span>
+                    <label class="checkbox-wrapper">
+                        <input type="checkbox" class="ref-checkbox" data-id="${item.id}" ${isChecked ? 'checked' : ''}>
+                        <div class="checkmark">
+                            <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                        </div>
+                    </label>
+                </div>
+                <h3 class="card-title">${item.title}</h3>
+                <div class="card-meta">
+                    <strong>Author:</strong> ${item.author} <br>
+                    <strong>Year:</strong> ${item.year} <br>
+                    <span class="status-text" style="color: ${isChecked ? 'var(--pastel-mint-dark)' : 'var(--text-muted)'}; font-weight: 600; margin-top: 5px; display: inline-block;">
+                        Status: ${isChecked ? 'Verified / Read' : 'Pending'}
+                    </span>
+                </div>
+                <a href="${item.url}" target="_blank" rel="noopener noreferrer" class="btn-link">View Document →</a>
+            `;
+            grid.appendChild(card);
+        });
+
+        contentDiv.appendChild(grid);
+        details.appendChild(contentDiv);
+        container.appendChild(details);
+    });
+
+    attachListeners();
+    updateProgress();
+}
+
+function attachListeners() {
+    const checkboxes = document.querySelectorAll('.ref-checkbox');
+    checkboxes.forEach(cb => {
+        cb.addEventListener('change', (e) => {
+            const id = e.target.dataset.id;
+            const isChecked = e.target.checked;
+            
+            // Save state
+            savedState[id] = isChecked;
+            localStorage.setItem('algorithmicLeviathanState', JSON.stringify(savedState));
+            
+            // Update Card UI
+            const card = document.getElementById(`card-${id}`);
+            const statusText = card.querySelector('.status-text');
+            if (isChecked) {
+                card.classList.add('checked');
+                statusText.textContent = 'Status: Verified / Read';
+                statusText.style.color = 'var(--pastel-mint-dark)';
+            } else {
+                card.classList.remove('checked');
+                statusText.textContent = 'Status: Pending';
+                statusText.style.color = 'var(--text-muted)';
+            }
+
+            updateProgress();
+        });
+    });
+}
+
+function updateProgress() {
+    const checkedCount = Object.values(savedState).filter(Boolean).length;
+    const pct = Math.round((checkedCount / totalItems) * 100);
+    
+    document.getElementById('progress-fill').style.width = `${pct}%`;
+    document.getElementById('progress-text').textContent = `${pct}% (${checkedCount}/${totalItems})`;
+}
+
+function exportJson() {
+    const exportData = {};
+    document.querySelectorAll('.ref-checkbox').forEach(cb => {
+        exportData[cb.dataset.id] = cb.checked;
+    });
+
+    const dataStr = JSON.stringify(exportData, null, 2);
+    const blob = new Blob([dataStr], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'reference_progress.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+// Initialize
+document.addEventListener('DOMContentLoaded', renderApp);
+
+</script>
+</body>
+</html>
